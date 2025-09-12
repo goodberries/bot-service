@@ -9,10 +9,21 @@ spec:
       - name: loader
         image: yashwanthydg/bot-service:v2 # Use the same image as the service
         command: ["python", "scripts/load_data.py"]
-        envFrom:
-        - secretRef:
-            name: pinecone-credentials
-        - secretRef:
-            name: aws-credentials
+        env:
+        - name: PINECONE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: pinecone-credentials
+              key: api_key
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_secret_access_key
       restartPolicy: Never
   backoffLimit: 4
