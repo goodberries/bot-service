@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+boto3 
+langchain
+langchain-community
+langchain-aws
+pinecone-client
+langchain-pinecone
+python-dotenv

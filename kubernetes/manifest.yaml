@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bot-service
+  template:
+    metadata:
+      labels:
+        app: bot-service
+    spec:
+      containers:
+      - name: bot-service
+        image: your-docker-registry/bot-service:latest # <-- IMPORTANT: Change this
+        ports:
+        - containerPort: 8001
+        env:
+        - name: OPENSEARCH_URL
+          value: "http://opensearch-cluster-master:9200" # Assumes OpenSearch is in the same k8s cluster
+        - name: AWS_REGION
+          value: "us-east-1" # Or your preferred region
+        # In a real cluster, you would use a secret for AWS credentials
+        # - name: AWS_ACCESS_KEY_ID
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: aws-credentials
+        #       key: access_key_id
+        # - name: AWS_SECRET_ACCESS_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: aws-credentials
+        #       key: secret_access_key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bot-service
+spec:
+  type: ClusterIP # Only accessible within the cluster
+  selector:
+    app: bot-service
+  ports:
+  - port: 8001
+    targetPort: 8001
