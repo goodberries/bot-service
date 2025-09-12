@@ -4,6 +4,6 @@ boto3
 langchain
 langchain-community
 langchain-aws
-pinecone-client
+pinecone-client>=3.0.0
 langchain-pinecone
 python-dotenv

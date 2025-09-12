@@ -11,7 +11,6 @@ load_dotenv()
 
 # --- Configuration ---
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
 INDEX_NAME = "rag-index"
 DATA_FILE = "data/knowledge_base.md"
 
@@ -19,8 +18,8 @@ def main():
     """
     Loads documents, splits them, creates embeddings, and stores them in Pinecone.
     """
-    if not PINECONE_API_KEY or not PINECONE_ENVIRONMENT:
-        print("PINECONE_API_KEY and PINECONE_ENVIRONMENT environment variables are required.")
+    if not PINECONE_API_KEY:
+        print("PINECONE_API_KEY environment variable is required.")
         return
 
     print("Loading documents...")
@@ -32,7 +31,7 @@ def main():
     docs = text_splitter.split_documents(documents)
 
     print("Initializing Pinecone...")
-    pinecone_client = PineconeClient(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+    pinecone_client = PineconeClient(api_key=PINECONE_API_KEY)
 
     print("Creating embeddings and indexing in Pinecone...")
     bedrock_client = boto3.client("bedrock-runtime")

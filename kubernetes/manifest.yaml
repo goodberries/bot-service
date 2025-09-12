@@ -26,11 +26,6 @@ spec:
             secretKeyRef:
               name: pinecone-credentials
               key: api_key
-        - name: PINECONE_ENVIRONMENT
-          valueFrom:
-            secretKeyRef:
-              name: pinecone-credentials
-              key: environment
         # Ensure the pod's Service Account has an IAM role with permissions
         # to access Bedrock.
         envFrom:
