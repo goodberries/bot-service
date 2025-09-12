@@ -34,7 +34,12 @@ def main():
     pinecone_client = PineconeClient(api_key=PINECONE_API_KEY)
 
     print("Creating embeddings and indexing in Pinecone...")
-    bedrock_client = boto3.client("bedrock-runtime")
+    #bedrock_client = boto3.client("bedrock-runtime")
+    bedrock_client = boto3.client(
+        "bedrock-runtime",
+        region_name=os.getenv("AWS_REGION", "us-east-1")
+    )
+
     embeddings = BedrockEmbeddings(client=bedrock_client)
 
     try:
