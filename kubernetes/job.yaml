@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: loader
-        image: yashwanthydg/bot-service:v5
+        image: yashwanthydg/bot-service:v6
         command: ["python", "scripts/load_data.py"]
         env:
         - name: PINECONE_API_KEY
