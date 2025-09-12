@@ -14,25 +14,25 @@ spec:
     spec:
       containers:
       - name: bot-service
-        image: your-docker-registry/bot-service:latest # <-- IMPORTANT: Change this
+        image: deadvexon/bot-service:latest # <-- IMPORTANT: Change this
         ports:
         - containerPort: 8001
         env:
-        - name: OPENSEARCH_URL
-          value: "http://opensearch-cluster-master:9200" # Assumes OpenSearch is in the same k8s cluster
         - name: AWS_REGION
           value: "us-east-1" # Or your preferred region
-        # In a real cluster, you would use a secret for AWS credentials
-        # - name: AWS_ACCESS_KEY_ID
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: aws-credentials
-        #       key: access_key_id
-        # - name: AWS_SECRET_ACCESS_KEY
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: aws-credentials
-        #       key: secret_access_key
+        # In a real cluster, you would use a secret for Pinecone credentials
+        - name: PINECONE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: pinecone-credentials
+              key: api_key
+        - name: PINECONE_ENVIRONMENT
+          valueFrom:
+            secretKeyRef:
+              name: pinecone-credentials
+              key: environment
+        # Ensure the pod's Service Account has an IAM role with permissions
+        # to access Bedrock.
 ---
 apiVersion: v1
 kind: Service
