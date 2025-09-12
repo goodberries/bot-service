@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from langchain_pinecone import Pinecone
-from langchain_community.embeddings import BedrockEmbeddings
+from langchain_aws import BedrockEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.llms import Bedrock
 import os
@@ -15,12 +15,10 @@ app = FastAPI()
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 INDEX_NAME = "rag-index"
 BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 # --- Bedrock and Embeddings Clients ---
-bedrock_client = boto3.client(
-    "bedrock-runtime",
-    region_name=os.getenv("AWS_REGION", "us-east-1")
-)
+bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
 embeddings = BedrockEmbeddings(client=bedrock_client)
 
 # --- Vector Store ---
