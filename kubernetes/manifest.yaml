@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: bot-service
-        image: yashwanthydg/bot-service:latest # <-- IMPORTANT: Change this
+        image: yashwanthydg/bot-service:v1 # <-- IMPORTANT: Change this
         ports:
         - containerPort: 8001
         env:
