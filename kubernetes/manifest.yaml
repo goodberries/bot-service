@@ -33,6 +33,9 @@ spec:
               key: environment
         # Ensure the pod's Service Account has an IAM role with permissions
         # to access Bedrock.
+        envFrom:
+        - secretRef:
+            name: aws-credentials
 ---
 apiVersion: v1
 kind: Service
