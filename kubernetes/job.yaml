@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pinecone-data-loader
+spec:
+  template:
+    spec:
+      containers:
+      - name: loader
+        image: your-registry/bot-service:v1 # Use the same image as the service
+        command: ["python", "scripts/load_data.py"]
+        envFrom:
+        - secretRef:
+            name: pinecone-credentials
+        - secretRef:
+            name: aws-credentials
+      restartPolicy: Never
+  backoffLimit: 4
