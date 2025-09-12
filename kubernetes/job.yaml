@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: loader
-        image: yashwanthydg/bot-service:v2 # Use the same image as the service
+        image: yashwanthydg/bot-service:v2
         command: ["python", "scripts/load_data.py"]
         env:
         - name: PINECONE_API_KEY
@@ -25,5 +25,7 @@ spec:
             secretKeyRef:
               name: aws-credentials
               key: aws_secret_access_key
+        - name: AWS_REGION
+          value: "us-east-1"   
       restartPolicy: Never
   backoffLimit: 4
