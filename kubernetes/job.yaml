@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: loader
-        image: your-registry/bot-service:v1 # Use the same image as the service
+        image: yashwanthydg/bot-service:v1 # Use the same image as the service
         command: ["python", "scripts/load_data.py"]
         envFrom:
         - secretRef:
