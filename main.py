@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from langchain_pinecone import Pinecone
 from langchain_aws import BedrockEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.llms import Bedrock
+from langchain_community.chat_models import BedrockChat  
 import os
 from dotenv import load_dotenv
 import boto3
@@ -29,7 +29,7 @@ vector_store = Pinecone.from_existing_index(
 )
 
 # --- LLM and QA Chain ---
-llm = Bedrock(
+llm = BedrockChat(   # ✅ BedrockChat supports Claude v3
     client=bedrock_client,
     model_id=BEDROCK_MODEL_ID
 )
@@ -51,9 +51,6 @@ async def process_query(data: dict):
     
     try:
         response = qa_chain.run(query)
-        
-        # In Phase 2, we will add logging here
-        
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
