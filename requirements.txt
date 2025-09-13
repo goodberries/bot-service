@@ -7,3 +7,5 @@ langchain-aws
 pinecone-client>=3.0.0
 langchain-pinecone
 python-dotenv
+sqlalchemy
+psycopg2-binary
