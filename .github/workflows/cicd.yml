@@ -38,5 +38,5 @@ jobs:
     steps:
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/bot-service=${{ secrets.DOCKERHUB_USERNAME }}/bot-service:${{ github.sha }}
+          kubectl set image deployment/bot-service bot-service=${{ secrets.DOCKERHUB_USERNAME }}/bot-service:${{ github.sha }}
           echo "Deployment updated successfully!"
