@@ -23,8 +23,7 @@ BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# debugging 
-print(DATABASE_URL)
+
 
 # --- Database Setup ---
 engine = create_engine(DATABASE_URL)
@@ -47,6 +46,7 @@ def startup_event():
             if not sqlalchemy.inspect(engine).has_table("interactions"):
                 metadata.create_all(engine)
                 print("Created 'interactions' table.")
+                print(DATABASE_URL)
             else:
                 print("'interactions' table already exists.")
     except Exception as e:
