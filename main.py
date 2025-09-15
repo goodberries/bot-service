@@ -7,7 +7,8 @@ import os
 from dotenv import load_dotenv
 import boto3
 import sqlalchemy
-from sqlalchemy import create_engine, Table, Column, String, MetaData, text, insert
+from sqlalchemy import create_engine, Table, Column, String, MetaData, insert, Integer, DateTime
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
 import uuid
 from datetime import datetime
 
@@ -26,24 +27,27 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
 
+# This is now the single source of truth for the table schema.
 interactions = Table('interactions', metadata,
-    Column('interaction_id', String, primary_key=True),
+    Column('interaction_id', pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
     Column('user_query', String),
     Column('bot_response', String),
-    Column('timestamp', String),
-    Column('feedback', String, nullable=True)
+    Column('timestamp', DateTime, default=datetime.utcnow),
+    Column('feedback', Integer, nullable=True) # Stores 1 for like, -1 for dislike
 )
 
 @app.on_event("startup")
 def startup_event():
     """Create the table on startup if it doesn't exist."""
-    with engine.connect() as connection:
-        if not sqlalchemy.inspect(engine).has_table("interactions"):
-            metadata.create_all(engine)
-            print("Created 'interactions' table.")
-        else:
-            print("'interactions' table already exists.")
-
+    try:
+        with engine.connect() as connection:
+            if not sqlalchemy.inspect(engine).has_table("interactions"):
+                metadata.create_all(engine)
+                print("Created 'interactions' table.")
+            else:
+                print("'interactions' table already exists.")
+    except Exception as e:
+        print(f"Database connection failed during startup: {e}")
 
 # --- Bedrock and Embeddings Clients ---
 bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
@@ -80,22 +84,18 @@ async def chat(request: Request):
         # Get response from RAG chain
         response_text = qa_chain.run(query)
         
-        # Log interaction to the database
-        interaction_id = str(uuid.uuid4())
-        timestamp = datetime.utcnow().isoformat()
-
+        # Log interaction to the database, returning the generated ID
         stmt = insert(interactions).values(
-            interaction_id=interaction_id,
             user_query=query,
             bot_response=response_text,
-            timestamp=timestamp
-        )
+        ).returning(interactions.c.interaction_id)
         
         with engine.connect() as connection:
-            connection.execute(stmt)
+            result = connection.execute(stmt)
             connection.commit()
+            interaction_id = result.fetchone()[0]
 
-        return {"response": response_text, "interaction_id": interaction_id}
+        return {"response": response_text, "interaction_id": str(interaction_id)}
 
     except Exception as e:
         print(f"Error processing query: {e}")
