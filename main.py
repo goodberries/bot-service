@@ -35,7 +35,8 @@ interactions = Table('interactions', metadata,
     Column('user_query', String),
     Column('bot_response', String),
     Column('timestamp', DateTime, default=datetime.utcnow),
-    Column('feedback', Integer, nullable=True) # Stores 1 for like, -1 for dislike
+    Column('feedback', Integer, nullable=True), # Stores 1 for like, -1 for dislike
+    Column('processed_for_training', sqlalchemy.Boolean, default=False, nullable=False)
 )
 
 @app.on_event("startup")
