@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: bot-service
-        image: yashwanthydg/bot-service:v8
+        image: yashwanthydg/bot-service:v9
         ports:
         - containerPort: 8001
         env:
