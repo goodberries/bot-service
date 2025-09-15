@@ -23,6 +23,9 @@ BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# debugging 
+print(DATABASE_URL)
+
 # --- Database Setup ---
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
