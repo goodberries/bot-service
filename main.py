@@ -49,6 +49,7 @@ def startup_event():
                 print(DATABASE_URL)
             else:
                 print("'interactions' table already exists.")
+                print(DATABASE_URL)
     except Exception as e:
         print(f"Database connection failed during startup: {e}")
 
