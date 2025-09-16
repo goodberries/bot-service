@@ -6,11 +6,7 @@ from langchain_community.chat_models import BedrockChat
 import os
 from dotenv import load_dotenv
 import boto3
-import sqlalchemy
-from sqlalchemy import create_engine, Table, Column, String, MetaData, insert, Integer, DateTime
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
-import uuid
-from datetime import datetime
+import httpx
 
 load_dotenv()
 
@@ -21,38 +17,8 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 INDEX_NAME = "rag-index"
 BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-DATABASE_URL = os.getenv("DATABASE_URL")
+INTERACTIONS_SERVICE_URL = os.getenv("INTERACTIONS_SERVICE_URL", "http://interactions-service:8003")
 
-
-
-# --- Database Setup ---
-engine = create_engine(DATABASE_URL)
-metadata = MetaData()
-
-# This is now the single source of truth for the table schema.
-interactions = Table('interactions', metadata,
-    Column('interaction_id', pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-    Column('user_query', String),
-    Column('bot_response', String),
-    Column('timestamp', DateTime, default=datetime.utcnow),
-    Column('feedback', Integer, nullable=True), # Stores 1 for like, -1 for dislike
-    Column('processed_for_training', sqlalchemy.Boolean, default=False, nullable=False)
-)
-
-@app.on_event("startup")
-def startup_event():
-    """Create the table on startup if it doesn't exist."""
-    try:
-        with engine.connect() as connection:
-            if not sqlalchemy.inspect(engine).has_table("interactions"):
-                metadata.create_all(engine)
-                print("Created 'interactions' table.")
-                print(DATABASE_URL)
-            else:
-                print("'interactions' table already exists.")
-                print(DATABASE_URL)
-    except Exception as e:
-        print(f"Database connection failed during startup: {e}")
 
 # --- Bedrock and Embeddings Clients ---
 bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
@@ -79,32 +45,35 @@ qa_chain = RetrievalQA.from_chain_type(
 @app.post("/chat")
 async def chat(request: Request):
     """
-    Processes a query, logs it, and returns a response with an interaction_id.
+    Processes a query, gets a response from the RAG chain,
+    and logs the interaction via the interactions-service.
     """
     query = request.query_params.get("query")
     if not query:
         raise HTTPException(status_code=400, detail="Query parameter not provided.")
     
     try:
-        # Get response from RAG chain
+        # 1. Get response from RAG chain
         response_text = qa_chain.run(query)
         
-        # Log interaction to the database, returning the generated ID
-        stmt = insert(interactions).values(
-            user_query=query,
-            bot_response=response_text,
-        ).returning(interactions.c.interaction_id)
-        
-        with engine.connect() as connection:
-            result = connection.execute(stmt)
-            connection.commit()
-            interaction_id = result.fetchone()[0]
+        # 2. Log interaction via the interactions-service
+        interaction_data = {"user_query": query, "bot_response": response_text}
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{INTERACTIONS_SERVICE_URL}/interactions", json=interaction_data)
+            response.raise_for_status() # Raise an exception for bad status codes
+            interaction = response.json()
+            interaction_id = interaction.get("interaction_id")
 
-        return {"response": response_text, "interaction_id": str(interaction_id)}
+        # 3. Return the response and the new interaction_id
+        return {"response": response_text, "interaction_id": interaction_id}
 
+    except httpx.HTTPStatusError as e:
+        # Log the error and forward the error from the downstream service
+        print(f"Error from interactions-service: {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"Error from interactions-service: {e.response.text}")
     except Exception as e:
-        print(f"Error processing query: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An internal error occurred in the bot service.")
 
 if __name__ == "__main__":
     import uvicorn
