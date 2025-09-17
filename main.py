@@ -12,7 +12,7 @@ load_dotenv()
 
 app = FastAPI()
 
-# --- Configuration ---
+# --- Configuration --- //test
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 INDEX_NAME = "rag-index"
 BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
