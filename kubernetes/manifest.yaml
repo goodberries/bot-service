@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bot-service
+  name: bot-service #test
 spec:
   replicas: 1
   selector:
